@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#102033" />
+  <title>FG Location Data Matrix Finder</title>
+  <script src="https://cdn.jsdelivr.net/npm/bwip-js@4.5.1/dist/bwip-js-min.js"></script>
+  <style>
+:root {
+  --bg1:#08111f; --bg2:#102033; --card:rgba(255,255,255,.96); --text:#102033;
+  --muted:#64748b; --line:#dbe4ef; --accent:#ffb020; --green:#22c55e; --blue:#2563eb;
+}
+* { box-sizing:border-box; }
+html,body {
+  min-height:100%; margin:0;
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:
+    radial-gradient(circle at 15% 0%,rgba(255,176,32,.22),transparent 28rem),
+    radial-gradient(circle at 90% 10%,rgba(37,99,235,.25),transparent 24rem),
+    linear-gradient(160deg,var(--bg1),var(--bg2));
+  color:white;
+}
+button,input { font:inherit; }
+button {
+  border:0; border-radius:16px; padding:.9rem 1rem; font-weight:900; cursor:pointer;
+  background:var(--accent); color:#111827; box-shadow:0 12px 28px rgba(0,0,0,.22);
+}
+button:active { transform:translateY(1px); }
+.hidden { display:none!important; }
+#app { width:min(820px,100%); margin:0 auto; padding:1rem; padding-bottom:calc(1rem + env(safe-area-inset-bottom)); }
+.hero { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:1rem .25rem 1.2rem; }
+.brand-row { display:flex; align-items:center; gap:.9rem; }
+.logo-card {
+  width:190px; min-height:78px; flex:0 0 190px; border-radius:22px; display:grid; place-items:center;
+  background:white; border:3px solid rgba(255,255,255,.45); box-shadow:0 18px 35px rgba(0,0,0,.28); padding:.55rem;
+}
+.logo-card svg { display:block; width:100%; height:auto; }
+.eyebrow { margin:0 0 .2rem; color:var(--accent); font-size:.78rem; text-transform:uppercase; letter-spacing:.14em; font-weight:1000; }
+h1 { margin:0; font-size:clamp(1.85rem,8vw,3.25rem); line-height:.95; letter-spacing:-.06em; }
+.subtitle { margin:.35rem 0 0; color:#d7e1ee; font-weight:750; }
+.view { display:none; }
+.view.active { display:block; }
+.panel,.code-panel {
+  background:var(--card); color:var(--text); border:1px solid rgba(255,255,255,.55);
+  border-radius:28px; padding:1rem; margin-bottom:1rem; box-shadow:0 22px 50px rgba(0,0,0,.26); backdrop-filter:blur(12px);
+}
+.search-panel label { display:block; font-size:1.05rem; font-weight:1000; margin-bottom:.65rem; }
+.search-row { display:grid; grid-template-columns:1fr auto auto; gap:.55rem; }
+input[type="search"] {
+  width:100%; border:3px solid var(--line); border-radius:18px; padding:1rem; font-size:1.2rem; font-weight:1000;
+  text-transform:uppercase; outline:none; background:white; color:var(--text);
+}
+input[type="search"]:focus { border-color:var(--accent); box-shadow:0 0 0 5px rgba(255,176,32,.22); }
+.icon-btn { min-width:58px; font-size:1.25rem; }
+.secondary { background:rgba(255,255,255,.16); color:white; border:1px solid rgba(255,255,255,.28); box-shadow:none; }
+.secondary.dark { background:#e2e8f0; color:#102033; border:0; }
+.status { min-height:1.25rem; color:var(--muted); font-weight:750; margin:.65rem 0 0; }
+.quick-add-row { margin-top:.65rem; display:grid; }
+.add-location { background:var(--green); color:#052e16; }
+.section-title { font-size:.85rem; color:var(--muted); text-transform:uppercase; letter-spacing:.12em; font-weight:1000; margin-bottom:.85rem; }
+.row-between { display:flex; justify-content:space-between; align-items:center; }
+.count { color:var(--blue); }
+.result-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(128px,1fr)); gap:.7rem; }
+.result {
+  min-height:74px; text-align:left; background:#f8fafc; color:var(--text); border:2px solid var(--line); box-shadow:none;
+  display:flex; flex-direction:column; justify-content:center; gap:.15rem;
+}
+.result strong { font-size:1.3rem; letter-spacing:.02em; }
+.result small { color:var(--muted); font-weight:800; }
+.chips { display:flex; flex-wrap:wrap; gap:.55rem; }
+.chips .result { width:auto; min-height:auto; padding:.75rem .95rem; }
+.custom-result .delete-custom {
+  margin-top:.35rem; background:#fee2e2; color:#991b1b; box-shadow:none; border-radius:10px; padding:.35rem .45rem; font-size:.78rem;
+}
+.back { margin-bottom:1rem; background:rgba(255,255,255,.16); color:white; border:1px solid rgba(255,255,255,.28); box-shadow:none; }
+.code-panel { min-height:72vh; display:flex; flex-direction:column; justify-content:center; }
+.scan-label {
+  width:max-content; margin:0 auto .8rem; background:#dcfce7; color:#166534; padding:.45rem .8rem; border-radius:999px;
+  font-weight:1000; text-transform:uppercase; letter-spacing:.08em; font-size:.78rem;
+}
+.location-line { display:flex; justify-content:center; align-items:center; gap:.8rem; }
+.location-line h2 { margin:0; font-size:clamp(3rem,16vw,7rem); line-height:1; letter-spacing:-.04em; }
+.favorite { background:#eef2f7; color:var(--text); box-shadow:none; font-size:2.1rem; padding:.45rem .75rem; }
+.favorite.active { background:#fef3c7; color:#b45309; }
+.code-wrap {
+  margin-top:1rem; width:100%; background:white; border:5px solid #0f172a; border-radius:22px; padding:1.15rem;
+  overflow:hidden; display:grid; place-items:center;
+}
+#dataMatrixCode {
+  width:min(74vw,380px); height:min(74vw,380px); max-width:100%; max-height:380px;
+  margin:0 auto; display:grid; place-items:center; background:white;
+}
+#dataMatrixCode canvas {
+  width:100%!important; height:100%!important; display:block; image-rendering:pixelated;
+}
+.actions { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-top:1rem; }
+.hint { color:var(--muted); text-align:center; font-weight:800; margin:1rem 0 0; }
+.exit-fullscreen {
+  display:none; position:fixed; top:max(12px,env(safe-area-inset-top)); right:12px; z-index:9999;
+  background:rgba(15,23,42,.82); color:white; border:1px solid rgba(255,255,255,.28); box-shadow:0 10px 24px rgba(0,0,0,.22); backdrop-filter:blur(8px);
+}
+.warehouse-animation { display:none; position:fixed; inset:0; pointer-events:none; z-index:9998; overflow:hidden; }
+.wh-ground { position:absolute; left:0; right:0; bottom:max(8px,env(safe-area-inset-bottom)); height:110px; overflow:hidden; }
+.wh-unit {
+  position:absolute; left:-180px; bottom:0; width:170px; opacity:.98; animation:driveAcross 14s linear infinite;
+  filter:drop-shadow(0 8px 10px rgba(0,0,0,.22));
+}
+.wh-unit svg { width:100%; height:auto; display:block; }
+@keyframes driveAcross {
+  0% { transform:translateX(0) scaleX(1); }
+  49% { transform:translateX(calc(100vw + 180px)) scaleX(1); }
+  50% { transform:translateX(calc(100vw + 180px)) scaleX(-1); }
+  99% { transform:translateX(0) scaleX(-1); }
+  100% { transform:translateX(0) scaleX(1); }
+}
+.fullscreen-mode { background:white!important; }
+.fullscreen-mode #app { width:100%; max-width:none; padding:0; }
+.fullscreen-mode .hero,.fullscreen-mode #searchView,.fullscreen-mode #backBtn,.fullscreen-mode .actions,.fullscreen-mode .hint,.fullscreen-mode .scan-label {
+  display:none!important;
+}
+.fullscreen-mode .exit-fullscreen,.fullscreen-mode .warehouse-animation { display:block!important; }
+.fullscreen-mode #codeView { display:flex!important; min-height:100vh; align-items:center; justify-content:center; background:white; }
+.fullscreen-mode .code-panel {
+  box-shadow:none; border:0; border-radius:0; width:100%; min-height:100vh; margin:0; padding:1rem 1rem 120px;
+}
+.fullscreen-mode .code-wrap { border:0; padding:0; max-width:80vh; margin-left:auto; margin-right:auto; }
+.fullscreen-mode #dataMatrixCode { width:min(78vw,64vh); height:min(78vw,64vh); max-height:64vh; }
+.fullscreen-mode .quick-add-row,.fullscreen-mode #customSection { display:none!important; }
+@media (max-width:520px) {
+  #app { padding:.75rem; }
+  .hero,.brand-row { align-items:flex-start; }
+  .logo-card { width:138px; min-height:58px; flex-basis:138px; border-radius:16px; }
+  .search-row { grid-template-columns:1fr auto; }
+  #clearBtn { grid-column:1/-1; }
+  .result-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .actions { grid-template-columns:1fr; }
+}
+  </style>
+</head>
+<body>
+  <div id="app">
+    <header class="hero">
+      <div class="brand-row">
+        <div class="logo-card">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 250" role="img" aria-label="Bridgetown Natural Foods logo">
+            <defs><linearGradient id="leaf" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#7bb342"/><stop offset="100%" stop-color="#2f7d32"/></linearGradient></defs>
+            <rect width="900" height="250" fill="none"/>
+            <g transform="translate(26,28)">
+              <path d="M80 120 C58 72 86 30 150 12 C169 63 154 109 107 137 C99 121 91 111 80 120Z" fill="url(#leaf)"/>
+              <path d="M98 133 C134 91 169 57 210 36" fill="none" stroke="#2f7d32" stroke-width="11" stroke-linecap="round"/>
+              <path d="M56 143 C84 116 117 115 146 143 C115 170 83 170 56 143Z" fill="#75a843"/>
+              <path d="M143 151 C179 120 219 122 253 153 C214 186 176 184 143 151Z" fill="#9fbf3b"/>
+              <path d="M40 191 C94 165 168 160 242 183" fill="none" stroke="#7b5a2f" stroke-width="12" stroke-linecap="round"/>
+            </g>
+            <text x="322" y="103" font-family="Georgia,'Times New Roman',serif" font-size="62" font-weight="700" fill="#223047">Bridgetown</text>
+            <text x="325" y="158" font-family="Arial,Helvetica,sans-serif" font-size="37" font-weight="700" letter-spacing="5" fill="#477832">NATURAL FOODS</text>
+            <path d="M326 176 H782" stroke="#d4aa3f" stroke-width="5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <p class="eyebrow">Warehouse Scanner Tool</p>
+          <h1>FG Location Finder</h1>
+          <p class="subtitle">Find the location. Open the Data Matrix code. Scan fast.</p>
+        </div>
+      </div>
+    </header>
+
+    <main id="searchView" class="view active">
+      <section class="panel search-panel">
+        <label for="searchInput">Search Location</label>
+        <div class="search-row">
+          <input id="searchInput" type="search" autocomplete="off" spellcheck="false" placeholder="FG01, 121802, FGSTG..." autofocus />
+          <button id="micBtn" class="icon-btn" type="button" title="Voice search">🎤</button>
+          <button id="clearBtn" class="secondary" type="button">Clear</button>
+        </div>
+        <div class="quick-add-row">
+          <button id="addLocationBtn" class="add-location" type="button">Generate & Save New Location</button>
+        </div>
+        <p id="voiceStatus" class="status">Tip: tap the microphone and say “F G zero one” or type a numeric Deacom code like 121802.</p>
+      </section>
+
+      <section id="favoritesSection" class="panel hidden"><div class="section-title">Favorites</div><div id="favoritesList" class="chips"></div></section>
+      <section id="recentSection" class="panel hidden"><div class="section-title">Recent</div><div id="recentList" class="chips"></div></section>
+      <section id="customSection" class="panel hidden"><div class="section-title">Saved on This Device</div><div id="customList" class="chips"></div></section>
+
+      <section class="panel">
+        <div class="section-title row-between"><span>Results</span><span id="resultCount" class="count"></span></div>
+        <div id="resultsList" class="result-grid"></div>
+      </section>
+    </main>
+
+    <main id="codeView" class="view">
+      <button id="backBtn" class="back" type="button">← Back to Search</button>
+      <section class="code-panel">
+        <div class="scan-label">Data Matrix Ready</div>
+        <div class="location-line">
+          <h2 id="selectedLocation">FG01</h2>
+          <button id="favoriteBtn" class="favorite" type="button" title="Favorite">☆</button>
+        </div>
+        <div id="codeWrap" class="code-wrap"><div id="dataMatrixCode"></div></div>
+        <button id="exitFullScreenBtn" class="exit-fullscreen" type="button" title="Exit full screen">✕ Exit Full Screen</button>
+        <div id="warehouseAnimation" class="warehouse-animation" aria-hidden="true"></div>
+        <div class="actions">
+          <button id="fullScreenBtn" type="button">Full Screen Code</button>
+          <button id="copyBtn" class="secondary dark" type="button">Copy Code</button>
+        </div>
+        <p class="hint">For best scanning, turn phone brightness up and keep the phone steady.</p>
+      </section>
+    </main>
+  </div>
+
+<script>
+const BASE_LOCATIONS = ["FG01", "FG02", "FG03", "FG04", "FG05", "FG06", "FG07", "FG08", "FG09", "FG10", "FG11", "FG12", "FG13", "FG14", "FG15", "FG16", "FG17", "FG18", "FG19", "FG20", "FG21", "FG22", "FG23", "FG24", "FG25", "FG26", "FG27", "FG28", "FG29", "FG30", "FGSTG"];
+const state = { locations:[], filtered:[], selected:null, wakeLock:null, motionTick:null };
+
+const els = {
+  searchView:document.getElementById("searchView"), codeView:document.getElementById("codeView"),
+  searchInput:document.getElementById("searchInput"), micBtn:document.getElementById("micBtn"),
+  clearBtn:document.getElementById("clearBtn"), addLocationBtn:document.getElementById("addLocationBtn"),
+  voiceStatus:document.getElementById("voiceStatus"), resultsList:document.getElementById("resultsList"),
+  resultCount:document.getElementById("resultCount"), favoritesSection:document.getElementById("favoritesSection"),
+  favoritesList:document.getElementById("favoritesList"), recentSection:document.getElementById("recentSection"),
+  recentList:document.getElementById("recentList"), customSection:document.getElementById("customSection"),
+  customList:document.getElementById("customList"), backBtn:document.getElementById("backBtn"),
+  selectedLocation:document.getElementById("selectedLocation"), dataMatrixCode:document.getElementById("dataMatrixCode"),
+  favoriteBtn:document.getElementById("favoriteBtn"), fullScreenBtn:document.getElementById("fullScreenBtn"),
+  exitFullScreenBtn:document.getElementById("exitFullScreenBtn"), copyBtn:document.getElementById("copyBtn"),
+  warehouseAnimation:document.getElementById("warehouseAnimation")
+};
+
+const WORD_NUMBERS = {
+  zero:"0", oh:"0", o:"0", one:"1", won:"1", two:"2", too:"2", to:"2", three:"3", four:"4", for:"4",
+  five:"5", six:"6", seven:"7", eight:"8", ate:"8", nine:"9", ten:"10", eleven:"11", twelve:"12",
+  thirteen:"13", fourteen:"14", fifteen:"15", sixteen:"16", seventeen:"17", eighteen:"18", nineteen:"19",
+  twenty:"20", thirty:"30", staging:"STG", stage:"STG"
+};
+
+function normalize(value) { return String(value||"").toUpperCase().replace(/[^A-Z0-9]/g,""); }
+function normalizeSpeech(value) {
+  let text = String(value||"").toLowerCase().replace(/dash|hyphen|minus/g," ");
+  return text.split(/\s+/).map(part => WORD_NUMBERS[part] ?? part).join("").toUpperCase().replace(/[^A-Z0-9]/g,"");
+}
+function formatLocationCode(value) { return String(value||"").trim().toUpperCase().replace(/\s+/g,"").replace(/[^A-Z0-9-]/g,""); }
+function getFavorites() { return JSON.parse(localStorage.getItem("favorites") || "[]"); }
+function setFavorites(list) { localStorage.setItem("favorites", JSON.stringify([...new Set(list)].slice(0,50))); }
+function getRecents() { return JSON.parse(localStorage.getItem("recents") || "[]"); }
+function setRecents(list) { localStorage.setItem("recents", JSON.stringify([...new Set(list)].slice(0,12))); }
+function getCustomLocations() { return JSON.parse(localStorage.getItem("customLocations") || "[]"); }
+function setCustomLocations(list) {
+  const cleaned = [...new Set(list.map(formatLocationCode).filter(Boolean))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  localStorage.setItem("customLocations", JSON.stringify(cleaned));
+}
+function mergeLocations() {
+  state.locations = [...new Set([...BASE_LOCATIONS, ...getCustomLocations()])].map(formatLocationCode).filter(Boolean)
+    .sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+}
+function loadLocations() { mergeLocations(); runSearch(els.searchInput.value||""); renderFavorites(); renderRecents(); renderCustomLocations(); }
+function runSearch(rawQuery) {
+  const query=normalize(rawQuery), speechQuery=normalizeSpeech(rawQuery);
+  let results=state.locations;
+  if (query || speechQuery) results=state.locations.filter(loc => normalize(loc).includes(query) || normalize(loc).includes(speechQuery));
+  state.filtered=results; renderResults();
+}
+function resultButton(location) {
+  const btn=document.createElement("button"); btn.className="result"; btn.type="button";
+  btn.innerHTML=`<strong>${escapeHtml(location)}</strong><small>Tap to Scan</small>`;
+  btn.addEventListener("click",()=>openCode(location)); return btn;
+}
+function renderResults() {
+  els.resultsList.innerHTML=""; els.resultCount.textContent=`${state.filtered.length}`;
+  if (!state.filtered.length) {
+    const empty=document.createElement("p"); empty.className="status";
+    empty.textContent="No matching locations found. Type a new one and tap Generate & Save New Location.";
+    els.resultsList.appendChild(empty); return;
+  }
+  state.filtered.forEach(location=>els.resultsList.appendChild(resultButton(location)));
+}
+function renderFavorites() {
+  const favorites=getFavorites().filter(loc=>state.locations.includes(loc));
+  els.favoritesList.innerHTML=""; els.favoritesSection.classList.toggle("hidden",favorites.length===0);
+  favorites.forEach(location=>els.favoritesList.appendChild(resultButton(location)));
+}
+function renderRecents() {
+  const recents=getRecents().filter(loc=>state.locations.includes(loc));
+  els.recentList.innerHTML=""; els.recentSection.classList.toggle("hidden",recents.length===0);
+  recents.forEach(location=>els.recentList.appendChild(resultButton(location)));
+}
+function renderCustomLocations() {
+  const custom=getCustomLocations(); els.customList.innerHTML=""; els.customSection.classList.toggle("hidden",custom.length===0);
+  custom.forEach(location=>{
+    const wrap=document.createElement("div"); wrap.className="custom-result";
+    const btn=resultButton(location);
+    const del=document.createElement("button"); del.className="delete-custom"; del.type="button"; del.textContent="Remove";
+    del.addEventListener("click",event=>{ event.stopPropagation(); setCustomLocations(getCustomLocations().filter(item=>item!==location)); loadLocations(); });
+    wrap.appendChild(btn); wrap.appendChild(del); els.customList.appendChild(wrap);
+  });
+}
+
+function drawDataMatrix(location) {
+  els.dataMatrixCode.innerHTML="";
+  const canvas=document.createElement("canvas");
+  canvas.setAttribute("aria-label", `Data Matrix code for ${location}`);
+  els.dataMatrixCode.appendChild(canvas);
+
+  if (!window.bwipjs) {
+    els.dataMatrixCode.innerHTML = `<div style="color:#991b1b;font-weight:900;text-align:center;padding:1rem;">Data Matrix generator did not load. Check internet connection and refresh.</div>`;
+    return;
+  }
+
+  try {
+    bwipjs.toCanvas(canvas, {
+      bcid:"datamatrix",
+      text:location,
+      scale:10,
+      paddingwidth:20,
+      paddingheight:20,
+      backgroundcolor:"FFFFFF",
+      barcolor:"000000"
+    });
+  } catch(err) {
+    els.dataMatrixCode.innerHTML = `<div style="color:#991b1b;font-weight:900;text-align:center;padding:1rem;">Could not generate Data Matrix code for ${escapeHtml(location)}.</div>`;
+  }
+}
+
+function svgStandupForkliftLoad() {
+  return `<svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg" role="presentation" aria-hidden="true">
+    <rect x="208" y="34" width="62" height="38" rx="6" fill="#c08457"/><path d="M216 44 H262 M216 56 H262" stroke="#8b5e3c" stroke-width="6" stroke-linecap="round"/>
+    <rect x="216" y="72" width="10" height="36" fill="#475569"/><rect x="232" y="72" width="10" height="36" fill="#475569"/>
+    <rect x="178" y="16" width="10" height="94" fill="#334155"/><rect x="192" y="16" width="8" height="94" fill="#334155"/>
+    <rect x="198" y="82" width="64" height="8" fill="#475569"/><rect x="198" y="98" width="64" height="8" fill="#475569"/>
+    <rect x="56" y="72" width="108" height="28" rx="9" fill="#f59e0b"/><rect x="88" y="38" width="62" height="40" rx="8" fill="#fbbf24"/>
+    <rect x="92" y="44" width="34" height="26" rx="5" fill="#dbeafe"/><rect x="108" y="22" width="10" height="56" fill="#334155"/>
+    <rect x="44" y="62" width="22" height="10" rx="4" fill="#334155"/><circle cx="136" cy="50" r="8" fill="#0f172a"/>
+    <rect x="129" y="58" width="14" height="18" rx="4" fill="#1d4ed8"/><rect x="160" y="84" width="24" height="18" rx="5" fill="#475569"/>
+    <circle cx="84" cy="112" r="23" fill="#1f2937"/><circle cx="84" cy="112" r="10" fill="#94a3b8"/>
+    <circle cx="164" cy="112" r="23" fill="#1f2937"/><circle cx="164" cy="112" r="10" fill="#94a3b8"/>
+    <path d="M66 72 C54 62, 52 52, 56 42" fill="none" stroke="#334155" stroke-width="7" stroke-linecap="round"/>
+  </svg>`;
+}
+function renderWarehouseAnimation() {
+  els.warehouseAnimation.innerHTML = `<div class="wh-ground"><div class="wh-unit">${svgStandupForkliftLoad()}</div></div>`;
+}
+function openCode(location) {
+  state.selected=location; els.searchView.classList.remove("active"); els.codeView.classList.add("active");
+  els.selectedLocation.textContent=location;
+  setRecents([location,...getRecents().filter(item=>item!==location)]); renderRecents();
+  drawDataMatrix(location); renderWarehouseAnimation(); updateFavoriteButton(); requestWakeLock(); startMotionKeepAlive();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function closeCode() {
+  exitFullscreenMode(); els.codeView.classList.remove("active"); els.searchView.classList.add("active");
+  releaseWakeLock(); stopMotionKeepAlive(); els.searchInput.focus();
+}
+function addLocationFromSearch() {
+  const newLocation=formatLocationCode(els.searchInput.value);
+  if (!newLocation) { els.voiceStatus.textContent="Type a location first, then tap Generate & Save."; els.searchInput.focus(); return; }
+  if (!/^[A-Z0-9-]{2,30}$/.test(newLocation)) { els.voiceStatus.textContent="Use letters, numbers, or dashes only."; els.searchInput.focus(); return; }
+  if (!state.locations.includes(newLocation)) {
+    setCustomLocations([newLocation,...getCustomLocations()]); loadLocations(); els.voiceStatus.textContent=`${newLocation} saved on this device.`;
+  } else { els.voiceStatus.textContent=`${newLocation} already exists.`; }
+  openCode(newLocation);
+}
+async function requestWakeLock() { try { if ("wakeLock" in navigator) state.wakeLock=await navigator.wakeLock.request("screen"); } catch(err) {} }
+async function releaseWakeLock() { try { if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock=null; } } catch(err) {} }
+function startMotionKeepAlive() {
+  stopMotionKeepAlive(); state.motionTick=setInterval(()=>{ if (!els.warehouseAnimation || !els.codeView.classList.contains("active")) return; els.warehouseAnimation.dataset.tick=String(Date.now()); },15000);
+}
+function stopMotionKeepAlive() { if (state.motionTick) { clearInterval(state.motionTick); state.motionTick=null; } }
+function enterFullscreenMode() { document.body.classList.add("fullscreen-mode"); requestWakeLock(); try { document.documentElement.requestFullscreen?.().catch?.(()=>{}); } catch(err) {} }
+function exitFullscreenMode() { document.body.classList.remove("fullscreen-mode"); if (document.fullscreenElement) document.exitFullscreen().catch(()=>{}); }
+function updateFavoriteButton() {
+  const active=getFavorites().includes(state.selected); els.favoriteBtn.textContent=active?"★":"☆"; els.favoriteBtn.classList.toggle("active",active);
+}
+function toggleFavorite() {
+  if (!state.selected) return; const favorites=getFavorites(); const exists=favorites.includes(state.selected);
+  setFavorites(exists ? favorites.filter(item=>item!==state.selected) : [state.selected,...favorites]);
+  updateFavoriteButton(); renderFavorites();
+}
+function startVoiceSearch() {
+  const SpeechRecognition=window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) { els.voiceStatus.textContent="Voice search is not supported in this browser."; return; }
+  const recognition=new SpeechRecognition(); recognition.lang="en-US"; recognition.interimResults=false; recognition.maxAlternatives=1;
+  els.voiceStatus.textContent="Listening…"; els.micBtn.textContent="🔴";
+  recognition.onresult=event=>{ const spoken=event.results[0][0].transcript; const normalized=normalizeSpeech(spoken); els.searchInput.value=normalized; els.voiceStatus.textContent=`Heard: ${spoken}`; runSearch(normalized); };
+  recognition.onerror=()=>{ els.voiceStatus.textContent="Voice search stopped. Try again or type the code."; };
+  recognition.onend=()=>{ els.micBtn.textContent="🎤"; };
+  recognition.start();
+}
+function escapeHtml(value) { return String(value).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+
+els.searchInput.addEventListener("input",event=>runSearch(event.target.value));
+els.clearBtn.addEventListener("click",()=>{ els.searchInput.value=""; els.voiceStatus.textContent='Tip: tap the microphone and say “F G zero one” or type a numeric Deacom code like 121802.'; runSearch(""); els.searchInput.focus(); });
+els.micBtn.addEventListener("click",startVoiceSearch);
+els.addLocationBtn.addEventListener("click",addLocationFromSearch);
+els.backBtn.addEventListener("click",closeCode);
+els.favoriteBtn.addEventListener("click",toggleFavorite);
+els.fullScreenBtn.addEventListener("click",enterFullscreenMode);
+els.exitFullScreenBtn.addEventListener("click",exitFullscreenMode);
+els.copyBtn.addEventListener("click",async()=>{ if (!state.selected) return; await navigator.clipboard.writeText(state.selected).catch(()=>{}); });
+document.addEventListener("fullscreenchange",()=>{ if (!document.fullscreenElement) document.body.classList.remove("fullscreen-mode"); });
+document.addEventListener("keydown",event=>{ if (event.key==="Escape") exitFullscreenMode(); });
+document.addEventListener("visibilitychange",()=>{ if (document.visibilityState==="visible" && els.codeView.classList.contains("active")) requestWakeLock(); });
+loadLocations();
+</script>
+</body>
+</html>
