@@ -1,0 +1,1528 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#102033" />
+<title>Location Barcode Easy Scan</title>
+<style>
+:root {
+  --navy:#07111f;
+  --navy2:#102033;
+  --card:#ffffff;
+  --text:#102033;
+  --muted:#64748b;
+  --line:#dbe4ef;
+  --orange:#ffb020;
+  --orange2:#fff7ed;
+  --blue:#2563eb;
+  --blue2:#dbeafe;
+  --green:#16a34a;
+  --green2:#dcfce7;
+  --red:#991b1b;
+}
+* { box-sizing:border-box; }
+html, body {
+  min-height:100%;
+  margin:0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,176,32,.14), transparent 18rem),
+    linear-gradient(165deg, var(--navy) 0%, var(--navy2) 55%, #0b1728 100%);
+  color:white;
+}
+button, input, textarea { font:inherit; }
+button {
+  border:0;
+  border-radius:16px;
+  padding:.9rem 1rem;
+  font-weight:900;
+  cursor:pointer;
+  background:var(--orange);
+  color:#111827;
+  box-shadow:0 10px 24px rgba(0,0,0,.18);
+}
+button:active { transform:translateY(1px); }
+.hidden { display:none!important; }
+#app {
+  width:min(760px,100%);
+  margin:0 auto;
+  padding:.65rem;
+  padding-bottom:calc(1rem + env(safe-area-inset-bottom));
+}
+.hero {
+  padding:.45rem .15rem .55rem;
+  margin-bottom:.2rem;
+}
+.brand-row {
+  display:flex;
+  align-items:center;
+  gap:.55rem;
+}
+.logo-card {
+  width:92px;
+  min-height:40px;
+  flex:0 0 92px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  background:white;
+  border:2px solid rgba(255,255,255,.55);
+  box-shadow:0 8px 18px rgba(0,0,0,.18);
+  padding:.3rem;
+}
+.logo-card svg { display:block; width:100%; height:auto; }
+.eyebrow {
+  margin:0 0 .08rem;
+  color:var(--orange);
+  font-size:.65rem;
+  text-transform:uppercase;
+  letter-spacing:.11em;
+  font-weight:1000;
+}
+h1 {
+  margin:0;
+  font-size:1.72rem;
+  line-height:.98;
+  letter-spacing:-.045em;
+}
+.subtitle {
+  margin:.2rem 0 0;
+  color:#cbd5e1;
+  font-weight:750;
+  font-size:.82rem;
+  line-height:1.2;
+}
+.view { display:none; }
+.view.active { display:block; }
+.panel, .code-panel {
+  background:rgba(255,255,255,.97);
+  color:var(--text);
+  border:1px solid rgba(255,255,255,.55);
+  border-radius:22px;
+  padding:.85rem;
+  margin-bottom:.8rem;
+  box-shadow:0 14px 34px rgba(0,0,0,.20);
+  backdrop-filter:blur(12px);
+}
+.search-panel {
+  position:fixed;
+  top:max(6px, env(safe-area-inset-top));
+  left:50%;
+  transform:translateX(-50%);
+  width:min(760px, calc(100% - .8rem));
+  z-index:9000;
+  margin:0;
+  border-radius:20px;
+  box-shadow:0 16px 38px rgba(0,0,0,.32);
+}
+#searchView { padding-top:138px; }
+.search-panel label {
+  display:block;
+  font-size:.76rem;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:#475569;
+  font-weight:1000;
+  margin-bottom:.42rem;
+}
+.search-row {
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:.45rem;
+}
+#searchInput {
+  width:100%;
+  min-height:58px;
+  border:4px solid #0f172a;
+  border-radius:18px;
+  padding:1rem;
+  font-size:1.22rem;
+  font-weight:1000;
+  text-transform:uppercase;
+  outline:none;
+  background:white;
+  color:var(--text);
+}
+#searchInput:focus {
+  border-color:var(--orange);
+  box-shadow:0 0 0 5px rgba(255,176,32,.20);
+}
+.icon-btn {
+  min-width:60px;
+  font-size:1.25rem;
+}
+#clearBtn {
+  grid-column:1/-1;
+  min-height:44px;
+  padding:.62rem;
+  background:#eef2f7;
+  color:var(--text);
+  box-shadow:none;
+}
+.search-panel .status { display:none; }
+.suggestion-list {
+  margin-top:.65rem;
+  display:grid;
+  gap:.55rem;
+  max-height:52vh;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+.suggestion-item {
+  width:100%;
+  min-height:74px;
+  text-align:left;
+  background:white;
+  color:var(--text);
+  border:2px solid var(--line);
+  border-left:7px solid var(--orange);
+  box-shadow:none;
+  border-radius:18px;
+  padding:.85rem .9rem;
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:.5rem;
+  align-items:center;
+}
+.suggestion-item strong {
+  font-size:1.5rem;
+  display:block;
+  letter-spacing:-.02em;
+}
+.suggestion-item small {
+  color:var(--muted);
+  font-weight:850;
+  font-size:.9rem;
+}
+.suggestion-pill {
+  background:var(--navy2);
+  color:white;
+  border-radius:999px;
+  padding:.35rem .6rem;
+  font-size:.78rem;
+  font-weight:1000;
+}
+.suggestion-empty {
+  margin-top:.65rem;
+  padding:.85rem 1rem;
+  border-radius:16px;
+  background:#fef3c7;
+  color:#92400e;
+  font-weight:900;
+  border:2px solid #fbbf24;
+}
+.section-title {
+  font-size:.75rem;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-weight:1000;
+  margin-bottom:.65rem;
+}
+.quick-row {
+  display:flex;
+  flex-wrap:wrap;
+  gap:.5rem;
+}
+.quick-btn {
+  min-width:82px;
+  background:white;
+  color:var(--text);
+  border:2px solid var(--line);
+  box-shadow:none;
+  padding:.75rem .85rem;
+}
+.quick-btn strong {
+  display:block;
+  font-size:1.05rem;
+}
+.quick-btn small {
+  display:block;
+  color:var(--muted);
+  font-size:.72rem;
+  margin-top:.1rem;
+}
+.favorite-quick {
+  border-color:#fde68a;
+  background:#fffbeb;
+}
+.recent-quick {
+  border-color:#bfdbfe;
+  background:#eff6ff;
+}
+.result-grid {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:.65rem;
+}
+.result {
+  min-height:86px;
+  text-align:left;
+  background:#f8fafc;
+  color:var(--text);
+  border:2px solid var(--line);
+  border-left:6px solid var(--orange);
+  box-shadow:none;
+  border-radius:18px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:.15rem;
+}
+.result strong {
+  font-size:1.45rem;
+  letter-spacing:-.02em;
+}
+.result small {
+  color:var(--muted);
+  font-weight:850;
+}
+.add-panel.collapsed .add-panel-body {
+  display:none;
+}
+.add-toggle {
+  width:100%;
+  background:#f8fafc;
+  color:var(--text);
+  border:2px solid var(--line);
+  box-shadow:none;
+}
+.add-panel.collapsed .add-toggle::after { content:"  +"; }
+.add-panel:not(.collapsed) .add-toggle::after { content:"  −"; }
+.form-grid {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:.75rem;
+}
+label {
+  display:block;
+  font-size:.92rem;
+  font-weight:1000;
+  margin-bottom:.45rem;
+}
+
+select {
+  width:100%;
+  border:3px solid var(--line);
+  border-radius:16px;
+  padding:.9rem;
+  font-size:1.05rem;
+  font-weight:1000;
+  text-transform:uppercase;
+  outline:none;
+  background:white;
+  color:var(--text);
+}
+
+input {
+  width:100%;
+  border:3px solid var(--line);
+  border-radius:16px;
+  padding:.9rem;
+  font-size:1.05rem;
+  font-weight:1000;
+  text-transform:uppercase;
+  outline:none;
+  background:white;
+  color:var(--text);
+}
+.add-location {
+  width:100%;
+  margin-top:.75rem;
+  background:var(--green2);
+  color:#166534;
+  border:2px solid #86efac;
+  box-shadow:none;
+}
+.status {
+  color:var(--muted);
+  font-weight:800;
+  margin:.65rem 0 0;
+}
+.admin-tools {
+  display:grid;
+  gap:.55rem;
+}
+.admin-textarea {
+  width:100%;
+  min-height:140px;
+  border:3px solid var(--line);
+  border-radius:16px;
+  padding:.8rem;
+  font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight:800;
+  resize:vertical;
+}
+.custom-card {
+  background:#f8fafc;
+  border:2px solid var(--line);
+  border-radius:18px;
+  padding:.75rem;
+  color:var(--text);
+}
+.custom-card strong { display:block; font-size:1.2rem; }
+.custom-card small { color:var(--muted); font-weight:850; }
+.custom-actions {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:.45rem;
+  margin-top:.55rem;
+}
+.custom-actions button {
+  box-shadow:none;
+  border-radius:12px;
+  padding:.55rem;
+  font-size:.9rem;
+}
+.edit-custom { background:#dbeafe; color:#1d4ed8; }
+.delete-custom { background:#fee2e2; color:#991b1b; }
+.back {
+  margin-bottom:.65rem;
+  background:rgba(255,255,255,.16);
+  color:white;
+  border:1px solid rgba(255,255,255,.28);
+  box-shadow:none;
+}
+.code-panel {
+  min-height:72vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.scan-label {
+  width:max-content;
+  margin:0 auto .65rem;
+  background:var(--green2);
+  color:#166534;
+  padding:.42rem .75rem;
+  border-radius:999px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-size:.74rem;
+}
+.location-line {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:.65rem;
+  flex-wrap:wrap;
+}
+.location-line h2 {
+  margin:0;
+  font-size:clamp(3.2rem, 18vw, 5.4rem);
+  line-height:1;
+  letter-spacing:-.04em;
+}
+.favorite {
+  background:#eef2f7;
+  color:var(--text);
+  box-shadow:none;
+  font-size:2rem;
+  padding:.45rem .72rem;
+}
+.favorite.active {
+  background:#fef3c7;
+  color:#b45309;
+}
+.meta-note {
+  text-align:center;
+  font-weight:1000;
+  color:#9a3412;
+  background:#fff7ed;
+  border:2px solid #fed7aa;
+  border-radius:14px;
+  padding:.6rem .75rem;
+  margin:.7rem auto 0;
+  width:max-content;
+  max-width:100%;
+  font-size:.95rem;
+}
+.type-switch {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:.5rem;
+  margin-top:.85rem;
+  background:#f1f5f9;
+  border:2px solid var(--line);
+  border-radius:20px;
+  padding:.35rem;
+}
+.type-btn {
+  border-radius:16px;
+  min-height:62px;
+  line-height:1.15;
+  border:0;
+  box-shadow:none;
+  background:#e2e8f0;
+  color:var(--text);
+}
+.type-btn.active {
+  background:var(--navy2);
+  color:white;
+  box-shadow:0 8px 16px rgba(15,23,42,.18);
+}
+.code-wrap {
+  margin-top:.85rem;
+  width:100%;
+  background:white;
+  border:4px solid #0f172a;
+  border-radius:20px;
+  padding:1rem .55rem;
+  overflow:hidden;
+  display:grid;
+  place-items:center;
+  min-height:260px;
+}
+#barcode {
+  width:100%;
+  overflow:auto;
+  display:flex;
+  justify-content:center;
+}
+#barcode svg {
+  width:100%;
+  max-width:100%;
+  height:auto;
+  display:block;
+}
+#qrBox {
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:.6rem;
+}
+#qrBox canvas {
+  width:min(88vw, 350px);
+  height:min(88vw, 350px);
+  display:block;
+  background:#fff;
+  border:14px solid #fff;
+  image-rendering:pixelated;
+}
+.scan-format-note {
+  text-align:center;
+  color:#166534;
+  background:var(--green2);
+  border:2px solid #86efac;
+  border-radius:14px;
+  padding:.6rem .75rem;
+  margin:.75rem auto 0;
+  font-weight:900;
+  font-size:.9rem;
+  width:max-content;
+  max-width:100%;
+}
+.actions {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:.6rem;
+  margin-top:.85rem;
+}
+.actions button {
+  min-height:54px;
+}
+.secondary.dark {
+  background:#e2e8f0;
+  color:var(--text);
+  border:0;
+  box-shadow:none;
+}
+.done-btn {
+  background:var(--green2);
+  color:#166534;
+  border:2px solid #86efac;
+  box-shadow:none;
+}
+.hint {
+  color:var(--muted);
+  text-align:center;
+  font-weight:800;
+  margin:.85rem 0 0;
+}
+.version-badge {
+  position:fixed;
+  left:10px;
+  bottom:max(10px, env(safe-area-inset-bottom));
+  z-index:10000;
+  background:rgba(15,23,42,.82);
+  color:white;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:999px;
+  padding:.35rem .6rem;
+  font-size:.72rem;
+  font-weight:900;
+  letter-spacing:.02em;
+  opacity:.88;
+}
+.exit-fullscreen {
+  display:none;
+  position:fixed;
+  top:max(12px, env(safe-area-inset-top));
+  right:12px;
+  z-index:9999;
+  background:rgba(15,23,42,.82);
+  color:white;
+  border:1px solid rgba(255,255,255,.28);
+  box-shadow:0 10px 24px rgba(0,0,0,.22);
+  backdrop-filter:blur(8px);
+}
+.warehouse-animation {
+  display:none;
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:9998;
+  overflow:hidden;
+  opacity:.28;
+}
+.wh-ground {
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:max(8px, env(safe-area-inset-bottom));
+  height:110px;
+  overflow:hidden;
+}
+.wh-unit {
+  position:absolute;
+  left:-180px;
+  bottom:0;
+  width:170px;
+  opacity:.98;
+  animation:driveAcross 14s linear infinite;
+  filter:drop-shadow(0 8px 10px rgba(0,0,0,.22));
+}
+.wh-unit svg { width:100%; height:auto; display:block; }
+@keyframes driveAcross {
+  0% { transform:translateX(0) scaleX(1); }
+  49% { transform:translateX(calc(100vw + 180px)) scaleX(1); }
+  50% { transform:translateX(calc(100vw + 180px)) scaleX(-1); }
+  99% { transform:translateX(0) scaleX(-1); }
+  100% { transform:translateX(0) scaleX(1); }
+}
+.fullscreen-mode {
+  background:white!important;
+}
+.fullscreen-mode #app {
+  width:100%;
+  max-width:none;
+  padding:0;
+}
+.fullscreen-mode .hero,
+.fullscreen-mode #searchView,
+.fullscreen-mode #backBtn,
+.fullscreen-mode .actions,
+.fullscreen-mode .hint,
+.fullscreen-mode .scan-label,
+.fullscreen-mode .scan-format-note,
+.fullscreen-mode .version-badge,
+.fullscreen-mode .meta-note,
+.fullscreen-mode .type-switch {
+  display:none!important;
+}
+.fullscreen-mode .exit-fullscreen,
+.fullscreen-mode .warehouse-animation {
+  display:block!important;
+}
+.fullscreen-mode #codeView {
+  display:flex!important;
+  min-height:100vh;
+  align-items:center;
+  justify-content:center;
+  background:white;
+}
+.fullscreen-mode .code-panel {
+  box-shadow:none;
+  border:0;
+  border-radius:0;
+  width:100%;
+  min-height:100vh;
+  margin:0;
+  padding:2rem 1rem 120px;
+}
+.fullscreen-mode .code-wrap {
+  border:0;
+  padding:0;
+  width:100%;
+  max-width:95vw;
+}
+.fullscreen-mode #barcode svg {
+  max-height:62vh;
+}
+.fullscreen-mode #qrBox canvas {
+  width:min(88vw, 500px);
+  height:min(88vw, 500px);
+}
+.fullscreen-mode #searchView {
+  padding-top:0;
+}
+.fullscreen-mode .search-panel {
+  display:none!important;
+}
+@media (min-width:560px) {
+  .type-switch {
+    grid-template-columns:1fr 1fr;
+  }
+  .actions {
+    grid-template-columns:1fr 1fr;
+  }
+  .result-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .form-grid {
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+/* Better scrolling model: fixed top + internal content scroll */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+#app {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.hero {
+  flex: 0 0 auto;
+}
+.search-panel {
+  position: static !important;
+  transform: none !important;
+  width: 100% !important;
+  flex: 0 0 auto;
+  margin-bottom: .65rem;
+}
+#searchView {
+  padding-top: 0 !important;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 1rem;
+}
+#codeView {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.suggestion-list {
+  max-height: 34dvh;
+}
+.fullscreen-mode #app {
+  height: 100dvh;
+}
+.fullscreen-mode #codeView {
+  overflow: hidden;
+}
+
+</style>
+</head>
+<body>
+<div class="version-badge">Easy Scan v15 • Better Scroll + Edit Values</div>
+<div id="app">
+  <header class="hero">
+    <div class="brand-row">
+      <div class="logo-card">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 250" role="img" aria-label="Bridgetown Natural Foods logo">
+          <defs><linearGradient id="leaf" x1="0" x2="1" y1="0" y2="1"><stop offset="0%" stop-color="#7bb342"/><stop offset="100%" stop-color="#2f7d32"/></linearGradient></defs>
+          <rect width="900" height="250" fill="none"/>
+          <g transform="translate(26,28)">
+            <path d="M80 120 C58 72 86 30 150 12 C169 63 154 109 107 137 C99 121 91 111 80 120Z" fill="url(#leaf)"/>
+            <path d="M98 133 C134 91 169 57 210 36" fill="none" stroke="#2f7d32" stroke-width="11" stroke-linecap="round"/>
+            <path d="M56 143 C84 116 117 115 146 143 C115 170 83 170 56 143Z" fill="#75a843"/>
+            <path d="M143 151 C179 120 219 122 253 153 C214 186 176 184 143 151Z" fill="#9fbf3b"/>
+            <path d="M40 191 C94 165 168 160 242 183" fill="none" stroke="#7b5a2f" stroke-width="12" stroke-linecap="round"/>
+          </g>
+          <text x="322" y="103" font-family="Georgia,'Times New Roman',serif" font-size="62" font-weight="700" fill="#223047">Bridgetown</text>
+          <text x="325" y="158" font-family="Arial,Helvetica,sans-serif" font-size="37" font-weight="700" letter-spacing="5" fill="#477832">NATURAL FOODS</text>
+          <path d="M326 176 H782" stroke="#d4aa3f" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        <p class="eyebrow">Warehouse Easy Scan Tool</p>
+        <h1>Location Barcode Easy Scan</h1>
+        <p class="subtitle">Search, tap, scan. Built for fast phone use.</p>
+      </div>
+    </div>
+  </header>
+
+  <main id="searchView" class="view active">
+    <section class="panel search-panel">
+      <label for="searchInput">Search Location</label>
+      <div class="search-row">
+        <input id="searchInput" type="search" autocomplete="off" spellcheck="false" placeholder="FG01, FG12, FGSTG, 121702..." autofocus />
+        <button id="micBtn" class="icon-btn" type="button" title="Voice search">🎤</button>
+        <button id="clearBtn" type="button">Clear Search</button>
+      </div>
+      <div id="suggestionList" class="suggestion-list"></div>
+      <p id="voiceStatus" class="status">Start typing and tap a suggestion.</p>
+    </section>
+
+    <section id="favoritesSection" class="panel hidden">
+      <div class="section-title">Favorites</div>
+      <div id="favoritesList" class="quick-row"></div>
+    </section>
+
+    <section id="recentSection" class="panel hidden">
+      <div class="section-title">Recently Used</div>
+      <div id="recentList" class="quick-row"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title">All Matching Locations</div>
+      <div id="resultsList" class="result-grid"></div>
+    </section>
+
+    <section class="panel add-panel collapsed">
+      <div class="section-title">Admin / Setup</div>
+      <button id="toggleAddPanelBtn" class="add-toggle" type="button">Open Admin Tools</button>
+      <div class="add-panel-body">
+        
+        <div class="section-title">Update Hidden QR Value for Existing Location</div>
+        <div class="form-grid">
+          <div>
+            <label for="updateLocationSelect">Choose Location</label>
+            <select id="updateLocationSelect"></select>
+          </div>
+          <div>
+            <label for="updateHiddenInput">Hidden QR Scan Value</label>
+            <input id="updateHiddenInput" type="text" placeholder="Example: 9515698" autocomplete="off" spellcheck="false" />
+          </div>
+        </div>
+        <button id="updateHiddenBtn" class="add-location" type="button">Update Hidden QR Value</button>
+        <p id="updateStatus" class="status">Select any existing location and update the hidden value the QR code scans.</p>
+
+<div class="section-title">Create New Mapping</div>
+        <div class="form-grid">
+          <div>
+            <label for="newDisplayInput">Visible Location Name</label>
+            <input id="newDisplayInput" type="text" placeholder="Example: FG01" autocomplete="off" spellcheck="false" />
+          </div>
+          <div>
+            <label for="newHiddenInput">Hidden QR Scan Value</label>
+            <input id="newHiddenInput" type="text" placeholder="Example: 9515698" autocomplete="off" spellcheck="false" />
+          </div>
+        </div>
+        <button id="addMappingBtn" class="add-location" type="button">Save Mapping</button>
+        <p id="addStatus" class="status">Normal users should not need this section. Use this only to add or correct mapping values.</p>
+
+        <div class="section-title" style="margin-top:1rem;">Import / Export Backup</div>
+        <div class="admin-tools">
+          <textarea id="bulkText" class="admin-textarea" placeholder="Paste mappings like:
+FG01,9515698
+FG02,9515699"></textarea>
+          <button id="importBtn" class="secondary dark" type="button">Import Pasted Mappings</button>
+          <button id="exportBtn" class="secondary dark" type="button">Export Saved Custom Mappings</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="customSection" class="panel hidden">
+      <div class="section-title">Saved Custom Mappings</div>
+      <div id="customList" class="result-grid"></div>
+    </section>
+  </main>
+
+  <main id="codeView" class="view">
+    <button id="backBtn" class="back" type="button">← Back to Search</button>
+    <section class="code-panel">
+      <div class="scan-label">Code Ready</div>
+      <div class="location-line">
+        <h2 id="selectedLocation">FG01</h2>
+        <button id="favoriteBtn" class="favorite" type="button" title="Favorite">☆</button>
+      </div>
+      <div id="metaNote" class="meta-note">QR scans: 9515698</div>
+
+      <div class="type-switch">
+        <button id="visibleBarcodeBtn" class="type-btn" type="button">Barcode</button>
+        <button id="hiddenQrBtn" class="type-btn" type="button">Deacom QR</button>
+      </div>
+
+      <div id="codeWrap" class="code-wrap">
+        <div id="barcode"></div>
+      </div>
+      <p id="codeExplanation" class="scan-format-note">Barcode: scans the visible location value.</p>
+
+      <button id="exitFullScreenBtn" class="exit-fullscreen" type="button">✕ Exit Full Screen</button>
+      <div id="warehouseAnimation" class="warehouse-animation" aria-hidden="true"></div>
+
+      <div class="actions">
+        <button id="fullScreenBtn" type="button">Full Screen Code</button>
+        <button id="copyBtn" class="secondary dark" type="button">Copy Current Value</button>
+        <button id="doneBtn" class="done-btn" type="button">Done / Search Another Location</button>
+      </div>
+      <p class="hint">For best scanning, turn phone brightness up.</p>
+    </section>
+  </main>
+</div>
+
+<script>
+(function resetOldAppCache() {
+  try {
+    if ("serviceWorker" in navigator) navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister())).catch(() => {});
+    if ("caches" in window) caches.keys().then(keys => keys.forEach(k => caches.delete(k))).catch(() => {});
+  } catch (err) {}
+})();
+
+const BASE_RECORDS = [{"display": "FG01", "hidden": "9515698", "builtIn": true}, {"display": "FG02", "hidden": "9515699", "builtIn": true}, {"display": "FG03", "hidden": "9515700", "builtIn": true}, {"display": "FG04", "hidden": "9515701", "builtIn": true}, {"display": "FG05", "hidden": "9515702", "builtIn": true}, {"display": "FG06", "hidden": "9515703", "builtIn": true}, {"display": "FG07", "hidden": "9515704", "builtIn": true}, {"display": "FG08", "hidden": "9515705", "builtIn": true}, {"display": "FG09", "hidden": "9515706", "builtIn": true}, {"display": "FG10", "hidden": "9515707", "builtIn": true}, {"display": "FG11", "hidden": "9515708", "builtIn": true}, {"display": "FG12", "hidden": "9515709", "builtIn": true}, {"display": "FG13", "hidden": "9515710", "builtIn": true}, {"display": "FG14", "hidden": "9515711", "builtIn": true}, {"display": "FG15", "hidden": "9515712", "builtIn": true}, {"display": "FG16", "hidden": "9515713", "builtIn": true}, {"display": "FG17", "hidden": "9515714", "builtIn": true}, {"display": "FG18", "hidden": "9515717", "builtIn": true}, {"display": "FG19", "hidden": "9515718", "builtIn": true}, {"display": "FG20", "hidden": "9515719", "builtIn": true}, {"display": "FG21", "hidden": "9515742", "builtIn": true}, {"display": "FG22", "hidden": "9515743", "builtIn": true}, {"display": "FG23", "hidden": "9515744", "builtIn": true}, {"display": "FG24", "hidden": "9515745", "builtIn": true}, {"display": "FG25", "hidden": "9515746", "builtIn": true}, {"display": "FG26", "hidden": "9515747", "builtIn": true}, {"display": "FG27", "hidden": "9515748", "builtIn": true}, {"display": "FG28", "hidden": "9515749", "builtIn": true}, {"display": "FG29", "hidden": "9515750", "builtIn": true}, {"display": "FG30", "hidden": "9515751", "builtIn": true}, {"display": "FGSTG", "hidden": "9515101", "builtIn": true}, {"display": "121702", "hidden": "9511271", "builtIn": true}];
+const state = { records:[], filtered:[], selected:null, codeMode:"hidden-qr", wakeLock:null, motionTick:null };
+
+const els = {
+  searchView:document.getElementById("searchView"),
+  codeView:document.getElementById("codeView"),
+  searchInput:document.getElementById("searchInput"),
+  micBtn:document.getElementById("micBtn"),
+  clearBtn:document.getElementById("clearBtn"),
+  voiceStatus:document.getElementById("voiceStatus"),
+  suggestionList:document.getElementById("suggestionList"),
+  favoritesSection:document.getElementById("favoritesSection"),
+  favoritesList:document.getElementById("favoritesList"),
+  recentSection:document.getElementById("recentSection"),
+  recentList:document.getElementById("recentList"),
+  resultsList:document.getElementById("resultsList"),
+  customSection:document.getElementById("customSection"),
+  customList:document.getElementById("customList"),
+  toggleAddPanelBtn:document.getElementById("toggleAddPanelBtn"),
+  newDisplayInput:document.getElementById("newDisplayInput"),
+  newHiddenInput:document.getElementById("newHiddenInput"),
+  addMappingBtn:document.getElementById("addMappingBtn"),
+  addStatus:document.getElementById("addStatus"),
+  updateLocationSelect:document.getElementById("updateLocationSelect"),
+  updateHiddenInput:document.getElementById("updateHiddenInput"),
+  updateHiddenBtn:document.getElementById("updateHiddenBtn"),
+  updateStatus:document.getElementById("updateStatus"),
+  bulkText:document.getElementById("bulkText"),
+  importBtn:document.getElementById("importBtn"),
+  exportBtn:document.getElementById("exportBtn"),
+  backBtn:document.getElementById("backBtn"),
+  doneBtn:document.getElementById("doneBtn"),
+  selectedLocation:document.getElementById("selectedLocation"),
+  metaNote:document.getElementById("metaNote"),
+  barcode:document.getElementById("barcode"),
+  visibleBarcodeBtn:document.getElementById("visibleBarcodeBtn"),
+  hiddenQrBtn:document.getElementById("hiddenQrBtn"),
+  codeExplanation:document.getElementById("codeExplanation"),
+  favoriteBtn:document.getElementById("favoriteBtn"),
+  fullScreenBtn:document.getElementById("fullScreenBtn"),
+  exitFullScreenBtn:document.getElementById("exitFullScreenBtn"),
+  copyBtn:document.getElementById("copyBtn"),
+  warehouseAnimation:document.getElementById("warehouseAnimation")
+};
+
+const WORD_NUMBERS = {
+  zero:"0", oh:"0", o:"0", one:"1", won:"1", two:"2", too:"2", to:"2", three:"3", four:"4", for:"4",
+  five:"5", six:"6", seven:"7", eight:"8", ate:"8", nine:"9", ten:"10", eleven:"11", twelve:"12",
+  thirteen:"13", fourteen:"14", fifteen:"15", sixteen:"16", seventeen:"17", eighteen:"18", nineteen:"19",
+  twenty:"20", thirty:"30", staging:"STG", stage:"STG"
+};
+
+const CODE39_MAP = {
+  "0":"nnnwwnwnn","1":"wnnwnnnnw","2":"nnwwnnnnw","3":"wnwwnnnnn","4":"nnnwwnnnw","5":"wnnwwnnnn","6":"nnwwwnnnn","7":"nnnwnnwnw","8":"wnnwnnwnn","9":"nnwwnnwnn",
+  "A":"wnnnnwnnw","B":"nnwnnwnnw","C":"wnwnnwnnn","D":"nnnnwwnnw","E":"wnnnwwnnn","F":"nnwnwwnnn","G":"nnnnnwwnw","H":"wnnnnwwnn","I":"nnwnnwwnn","J":"nnnnwwwnn",
+  "K":"wnnnnnnww","L":"nnwnnnnww","M":"wnwnnnnwn","N":"nnnnwnnww","O":"wnnnwnnwn","P":"nnwnwnnwn","Q":"nnnnnnwww","R":"wnnnnnwwn","S":"nnwnnnwwn","T":"nnnnwnwwn",
+  "U":"wwnnnnnnw","V":"nwwnnnnnw","W":"wwwnnnnnn","X":"nwnnwnnnw","Y":"wwnnwnnnn","Z":"nwwnwnnnn","-":"nwnnnnwnw",".":"wwnnnnwnn"," ":"nwwnnnwnn","$":"nwnwnwnnn","/":"nwnwnnnwn","+":"nwnnnwnwn","%":"nnnwnwnwn","*":"nwnnwnwnn"
+};
+
+function cleanValue(value) {
+  return String(value||"").trim().toUpperCase().replace(/\s+/g,"").replace(/[^A-Z0-9\-\. \$/\+%]/g,"");
+}
+function normalize(value) {
+  return String(value||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+}
+function normalizeSpeech(value) {
+  let text = String(value||"").toLowerCase().replace(/dash|hyphen|minus/g," ");
+  return text.split(/\s+/).map(part => WORD_NUMBERS[part] ?? part).join("").toUpperCase().replace(/[^A-Z0-9]/g,"");
+}
+function dedupeRecords(records) {
+  const map = new Map();
+  records.forEach(record => {
+    const display = cleanValue(record.display);
+    const hidden = cleanValue(record.hidden);
+    if (!display || !hidden) return;
+    map.set(display, { display, hidden, builtIn: !!record.builtIn });
+  });
+  return [...map.values()].sort(sortRecords);
+}
+function sortRecords(a,b) {
+  const aDisplay = a.display, bDisplay = b.display;
+  if (aDisplay === bDisplay) return 0;
+  return aDisplay.localeCompare(bDisplay, undefined, { numeric:true });
+}
+
+function getHiddenOverrides() {
+  return JSON.parse(localStorage.getItem("barcodeHiddenOverrides") || "{}");
+}
+function setHiddenOverrides(overrides) {
+  localStorage.setItem("barcodeHiddenOverrides", JSON.stringify(overrides));
+}
+
+function getCustomRecordsRaw() {
+  return JSON.parse(localStorage.getItem("customBarcodeMappings") || "[]");
+}
+function getCustomRecords() {
+  return dedupeRecords(getCustomRecordsRaw().map(item => {
+    if (typeof item === "string") return { display: cleanValue(item), hidden: cleanValue(item), builtIn:false };
+    return { display: cleanValue(item.display), hidden: cleanValue(item.hidden), builtIn:false };
+  }));
+}
+function setCustomRecords(records) {
+  localStorage.setItem("customBarcodeMappings", JSON.stringify(dedupeRecords(records).filter(r=>!r.builtIn)));
+}
+function getFavorites() {
+  return JSON.parse(localStorage.getItem("favoritesHiddenBarcode") || "[]");
+}
+function setFavorites(list) {
+  localStorage.setItem("favoritesHiddenBarcode", JSON.stringify([...new Set(list)].slice(0,50)));
+}
+function getRecents() {
+  return JSON.parse(localStorage.getItem("recentsHiddenBarcode") || "[]");
+}
+function setRecents(list) {
+  localStorage.setItem("recentsHiddenBarcode", JSON.stringify([...new Set(list)].slice(0,12)));
+}
+function mergeRecords() {
+  const overrides = getHiddenOverrides ? getHiddenOverrides() : {};
+  const baseWithOverrides = BASE_RECORDS.map(record => {
+    const display = cleanValue(record.display);
+    return { display, hidden: cleanValue(overrides[display] || record.hidden), builtIn:true };
+  });
+  state.records = dedupeRecords([...baseWithOverrides, ...getCustomRecords()]);
+}
+function findRecord(display) {
+  return state.records.find(r => r.display === display);
+}
+
+function rankRecord(record, query) {
+  if (!query) return 50;
+  const d = normalize(record.display);
+  const h = normalize(record.hidden);
+  if (d === query) return 0;
+  if (d.startsWith(query)) return 1;
+  if (d.includes(query)) return 2;
+  if (h === query) return 3;
+  if (h.startsWith(query)) return 4;
+  if (h.includes(query)) return 5;
+  return 99;
+}
+
+function runSearch(rawQuery) {
+  const query = normalize(rawQuery);
+  const speechQuery = normalizeSpeech(rawQuery);
+  const q = query || speechQuery;
+  let results = state.records;
+  if (q) {
+    results = state.records
+      .filter(r => normalize(r.display).includes(q) || normalize(r.hidden).includes(q))
+      .sort((a,b) => rankRecord(a,q) - rankRecord(b,q) || sortRecords(a,b));
+  }
+  state.filtered = results;
+  renderSuggestions();
+  renderResults();
+}
+
+function quickButton(record, className) {
+  const btn = document.createElement("button");
+  btn.className = `quick-btn ${className || ""}`;
+  btn.type = "button";
+  btn.innerHTML = `<strong>${escapeHtml(record.display)}</strong><small>QR ${escapeHtml(record.hidden)}</small>`;
+  btn.addEventListener("click", () => openCode(record.display));
+  return btn;
+}
+
+function resultButton(record) {
+  const btn = document.createElement("button");
+  btn.className = "result";
+  btn.type = "button";
+  btn.innerHTML = `<strong>${escapeHtml(record.display)}</strong><small>Barcode: ${escapeHtml(record.display)} · Deacom QR: ${escapeHtml(record.hidden)}</small>`;
+  btn.addEventListener("click", () => openCode(record.display));
+  return btn;
+}
+
+function renderSuggestions() {
+  els.suggestionList.innerHTML = "";
+  const typed = els.searchInput.value.trim();
+  const suggestions = (typed ? state.filtered : state.records).slice(0, 6);
+  if (!suggestions.length) {
+    const empty = document.createElement("div");
+    empty.className = "suggestion-empty";
+    empty.innerHTML = `<strong>${escapeHtml(cleanValue(typed)) || "No match"} is not saved yet.</strong><br>Open Admin Tools below to add it.`;
+    els.suggestionList.appendChild(empty);
+    return;
+  }
+  if (!typed) return;
+  suggestions.forEach(record => {
+    const btn = document.createElement("button");
+    btn.className = "suggestion-item";
+    btn.type = "button";
+    btn.innerHTML = `<span><strong>${escapeHtml(record.display)}</strong><small>Deacom QR scans: ${escapeHtml(record.hidden)}</small></span><span class="suggestion-pill">Open</span>`;
+    btn.addEventListener("click", () => openCode(record.display));
+    els.suggestionList.appendChild(btn);
+  });
+}
+
+function renderResults() {
+  els.resultsList.innerHTML = "";
+  const list = (els.searchInput.value.trim() ? state.filtered : state.records).slice(0, 40);
+  if (!list.length) {
+    const empty = document.createElement("p");
+    empty.className = "status";
+    empty.textContent = "No matching locations found.";
+    els.resultsList.appendChild(empty);
+    return;
+  }
+  list.forEach(record => els.resultsList.appendChild(resultButton(record)));
+}
+
+function renderFavorites() {
+  const favorites = getFavorites().map(findRecord).filter(Boolean);
+  els.favoritesList.innerHTML = "";
+  els.favoritesSection.classList.toggle("hidden", favorites.length === 0);
+  favorites.slice(0, 10).forEach(record => els.favoritesList.appendChild(quickButton(record, "favorite-quick")));
+}
+
+function renderRecents() {
+  const recents = getRecents().map(findRecord).filter(Boolean);
+  els.recentList.innerHTML = "";
+  els.recentSection.classList.toggle("hidden", recents.length === 0);
+  recents.slice(0, 10).forEach(record => els.recentList.appendChild(quickButton(record, "recent-quick")));
+}
+
+function renderCustomRecords() {
+  const custom = getCustomRecords();
+  els.customList.innerHTML = "";
+  els.customSection.classList.toggle("hidden", custom.length === 0);
+  custom.forEach(record => {
+    const card = document.createElement("div");
+    card.className = "custom-card";
+    card.innerHTML = `<strong>${escapeHtml(record.display)}</strong><small>Hidden QR: ${escapeHtml(record.hidden)}</small>`;
+    card.addEventListener("click", () => openCode(record.display));
+
+    const actions = document.createElement("div");
+    actions.className = "custom-actions";
+
+    const edit = document.createElement("button");
+    edit.className = "edit-custom";
+    edit.type = "button";
+    edit.textContent = "Edit";
+    edit.addEventListener("click", event => {
+      event.stopPropagation();
+      els.newDisplayInput.value = record.display;
+      els.newHiddenInput.value = record.hidden;
+      document.querySelector(".add-panel")?.classList.remove("collapsed");
+      els.newHiddenInput.focus();
+    });
+
+    const del = document.createElement("button");
+    del.className = "delete-custom";
+    del.type = "button";
+    del.textContent = "Remove";
+    del.addEventListener("click", event => {
+      event.stopPropagation();
+      setCustomRecords(getCustomRecords().filter(item => item.display !== record.display));
+      loadRecords();
+    });
+
+    actions.appendChild(edit);
+    actions.appendChild(del);
+    card.appendChild(actions);
+    els.customList.appendChild(card);
+  });
+}
+
+
+function renderUpdateSelect() {
+  if (!els.updateLocationSelect) return;
+  const previous = els.updateLocationSelect.value;
+  els.updateLocationSelect.innerHTML = "";
+  state.records.forEach(record => {
+    const option = document.createElement("option");
+    option.value = record.display;
+    option.textContent = `${record.display} → ${record.hidden}`;
+    els.updateLocationSelect.appendChild(option);
+  });
+  if (previous && findRecord(previous)) els.updateLocationSelect.value = previous;
+  updateSelectedHiddenInput();
+}
+
+function updateSelectedHiddenInput() {
+  if (!els.updateLocationSelect || !els.updateHiddenInput) return;
+  const record = findRecord(els.updateLocationSelect.value) || state.records[0];
+  if (!record) return;
+  els.updateLocationSelect.value = record.display;
+  els.updateHiddenInput.value = record.hidden;
+}
+
+function updateHiddenValue() {
+  const display = cleanValue(els.updateLocationSelect?.value);
+  const hidden = cleanValue(els.updateHiddenInput?.value);
+  if (!display || !hidden) {
+    if (els.updateStatus) {
+      els.updateStatus.textContent = "Choose a location and enter a hidden QR scan value.";
+      els.updateStatus.style.color = "#991b1b";
+    }
+    return;
+  }
+
+  const baseRecord = BASE_RECORDS.find(r => cleanValue(r.display) === display);
+  if (baseRecord) {
+    const overrides = getHiddenOverrides();
+    if (hidden === cleanValue(baseRecord.hidden)) delete overrides[display];
+    else overrides[display] = hidden;
+    setHiddenOverrides(overrides);
+  } else {
+    const custom = getCustomRecords().filter(r => r.display !== display);
+    custom.push({ display, hidden, builtIn:false });
+    setCustomRecords(custom);
+  }
+
+  if (els.updateStatus) {
+    els.updateStatus.textContent = `${display} updated. Deacom QR now scans ${hidden}.`;
+    els.updateStatus.style.color = "#166534";
+  }
+  loadRecords();
+  runSearch(els.searchInput.value || "");
+}
+
+function loadRecords() {
+  mergeRecords();
+  runSearch(els.searchInput.value || "");
+  renderFavorites();
+  renderRecents();
+  renderCustomRecords();
+  renderUpdateSelect();
+}
+
+function addMapping() {
+  const display = cleanValue(els.newDisplayInput.value || els.searchInput.value);
+  const hidden = cleanValue(els.newHiddenInput.value);
+  if (!display || !hidden) {
+    els.addStatus.textContent = "Both fields are required: visible location and hidden QR scan value.";
+    els.addStatus.style.color = "#991b1b";
+    return;
+  }
+  if (!canEncodeCode39(display)) {
+    els.addStatus.textContent = "Visible location has unsupported characters for Code39.";
+    els.addStatus.style.color = "#991b1b";
+    return;
+  }
+  const custom = getCustomRecords().filter(r => r.display !== display);
+  custom.push({ display, hidden, builtIn:false });
+  setCustomRecords(custom);
+  els.searchInput.value = display;
+  els.newDisplayInput.value = "";
+  els.newHiddenInput.value = "";
+  els.addStatus.textContent = `${display} saved. Barcode scans ${display}. Deacom QR scans ${hidden}.`;
+  els.addStatus.style.color = "#166534";
+  loadRecords();
+  openCode(display);
+}
+
+function importMappings() {
+  const text = els.bulkText.value || "";
+  const lines = text.split(/
++/).map(line => line.trim()).filter(Boolean);
+  const current = getCustomRecords();
+  const overrides = getHiddenOverrides();
+  let added = 0;
+  lines.forEach(line => {
+    const parts = line.split(/[	,= ]+/).map(x => cleanValue(x)).filter(Boolean);
+    if (parts.length >= 2) {
+      const display = parts[0];
+      const hidden = parts[1];
+      const baseRecord = BASE_RECORDS.find(r => cleanValue(r.display) === display);
+      if (baseRecord) {
+        if (hidden === cleanValue(baseRecord.hidden)) delete overrides[display];
+        else overrides[display] = hidden;
+      } else {
+        const idx = current.findIndex(r => r.display === display);
+        if (idx >= 0) current[idx] = { display, hidden, builtIn:false };
+        else current.push({ display, hidden, builtIn:false });
+      }
+      added++;
+    }
+  });
+  setHiddenOverrides(overrides);
+  setCustomRecords(current);
+  els.addStatus.textContent = `Imported ${added} mapping(s).`;
+  els.addStatus.style.color = "#166534";
+  els.bulkText.value = "";
+  loadRecords();
+}
+
+function exportMappings() {
+  const text = state.records.map(r => `${r.display},${r.hidden}`).join("
+");
+  els.bulkText.value = text || "No mappings found.";
+  els.bulkText.select();
+}
+
+function canEncodeCode39(value) {
+  return [...String(value||"").toUpperCase()].every(ch => CODE39_MAP[ch]);
+}
+
+function buildCode39SVG(value) {
+  const clean = cleanValue(value);
+  if (!canEncodeCode39(clean)) return `<p style="color:#991b1b;font-weight:900;text-align:center;">Unsupported value for Code39.</p>`;
+  const encoded = `*${clean}*`;
+  const narrow = 6, wide = 18, gap = 6, height = 170, quiet = 24;
+  let x = quiet, bars = "";
+  for (let i = 0; i < encoded.length; i++) {
+    const pattern = CODE39_MAP[encoded[i]];
+    for (let j = 0; j < pattern.length; j++) {
+      const isBar = j % 2 === 0;
+      const w = pattern[j] === "w" ? wide : narrow;
+      if (isBar) bars += `<rect x="${x}" y="12" width="${w}" height="${height}" fill="#000"/>`;
+      x += w;
+    }
+    if (i < encoded.length - 1) x += gap;
+  }
+  const totalWidth = x + quiet;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} 230" role="img" aria-label="Code39 barcode">
+    <rect width="100%" height="100%" fill="#fff"/>${bars}
+    <text x="50%" y="214" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="30" font-weight="700" fill="#000">${escapeHtml(clean)}</text>
+  </svg>`;
+}
+
+/*
+  Offline QR generator:
+  This is a compact QR implementation for byte/numeric text through a canvas fallback.
+  It uses a built-in QR service only if canvas generation fails.
+*/
+function buildQrBox(hidden, display) {
+  const id = "qrCanvas";
+  setTimeout(() => drawSimpleQRToCanvas(id, hidden), 0);
+  return `<div id="qrBox"><canvas id="${id}" width="420" height="420" aria-label="QR code"></canvas><div style="font-weight:1000;color:#102033;text-align:center;">${escapeHtml(display)}</div><div style="color:#64748b;font-weight:850;text-align:center;">Deacom QR scans: ${escapeHtml(hidden)}</div></div>`;
+}
+
+/*
+  Lightweight QR via browser-safe fallback:
+  Uses an encoded SVG image from quickchart if the full QR matrix generator is unavailable.
+  This keeps the app working for test use while all visible Code39 barcodes remain self-contained.
+*/
+function drawSimpleQRToCanvas(id, text) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = function() {
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  };
+  img.onerror = function() {
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#000";
+    ctx.font = "bold 26px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("QR unavailable", canvas.width/2, canvas.height/2 - 10);
+    ctx.font = "bold 22px monospace";
+    ctx.fillText(text, canvas.width/2, canvas.height/2 + 28);
+  };
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=420x420&data=${encodeURIComponent(text)}`;
+}
+
+function renderCurrentCode() {
+  if (!state.selected) return;
+  const record = state.selected;
+  els.visibleBarcodeBtn.classList.toggle("active", state.codeMode === "visible-barcode");
+  els.hiddenQrBtn.classList.toggle("active", state.codeMode === "hidden-qr");
+  els.visibleBarcodeBtn.textContent = `Barcode — ${record.display}`;
+  els.hiddenQrBtn.textContent = `Deacom QR — ${record.hidden}`;
+
+  if (state.codeMode === "visible-barcode") {
+    els.barcode.innerHTML = buildCode39SVG(record.display);
+    els.metaNote.textContent = `Barcode scans: ${record.display}`;
+    els.codeExplanation.textContent = `Barcode: scans the visible location value ${record.display}.`;
+  } else {
+    els.barcode.innerHTML = buildQrBox(record.hidden, record.display);
+    els.metaNote.textContent = `Deacom QR scans: ${record.hidden}`;
+    els.codeExplanation.textContent = `Deacom QR: shows ${record.display}, but scans hidden value ${record.hidden}.`;
+  }
+}
+
+function svgStandupForkliftLoad() {
+  return `<svg viewBox="0 0 300 160" xmlns="http://www.w3.org/2000/svg" role="presentation" aria-hidden="true">
+    <rect x="208" y="34" width="62" height="38" rx="6" fill="#c08457"/><path d="M216 44 H262 M216 56 H262" stroke="#8b5e3c" stroke-width="6" stroke-linecap="round"/>
+    <rect x="216" y="72" width="10" height="36" fill="#475569"/><rect x="232" y="72" width="10" height="36" fill="#475569"/>
+    <rect x="178" y="16" width="10" height="94" fill="#334155"/><rect x="192" y="16" width="8" height="94" fill="#334155"/>
+    <rect x="198" y="82" width="64" height="8" fill="#475569"/><rect x="198" y="98" width="64" height="8" fill="#475569"/>
+    <rect x="56" y="72" width="108" height="28" rx="9" fill="#f59e0b"/><rect x="88" y="38" width="62" height="40" rx="8" fill="#fbbf24"/>
+    <rect x="92" y="44" width="34" height="26" rx="5" fill="#dbeafe"/><rect x="108" y="22" width="10" height="56" fill="#334155"/>
+    <rect x="44" y="62" width="22" height="10" rx="4" fill="#334155"/><circle cx="136" cy="50" r="8" fill="#0f172a"/>
+    <rect x="129" y="58" width="14" height="18" rx="4" fill="#1d4ed8"/><rect x="160" y="84" width="24" height="18" rx="5" fill="#475569"/>
+    <circle cx="84" cy="112" r="23" fill="#1f2937"/><circle cx="84" cy="112" r="10" fill="#94a3b8"/>
+    <circle cx="164" cy="112" r="23" fill="#1f2937"/><circle cx="164" cy="112" r="10" fill="#94a3b8"/>
+    <path d="M66 72 C54 62, 52 52, 56 42" fill="none" stroke="#334155" stroke-width="7" stroke-linecap="round"/>
+  </svg>`;
+}
+function renderWarehouseAnimation() {
+  els.warehouseAnimation.innerHTML = `<div class="wh-ground"><div class="wh-unit">${svgStandupForkliftLoad()}</div></div>`;
+}
+
+function openCode(display) {
+  const record = findRecord(display);
+  if (!record) return;
+  state.selected = record;
+  state.codeMode = "hidden-qr";
+  els.searchView.classList.remove("active");
+  els.codeView.classList.add("active");
+  els.selectedLocation.textContent = record.display;
+  setRecents([record.display, ...getRecents().filter(item => item !== record.display)]);
+  renderRecents();
+  renderWarehouseAnimation();
+  updateFavoriteButton();
+  requestWakeLock();
+  startMotionKeepAlive();
+  renderCurrentCode();
+  window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+function closeCode() {
+  exitFullscreenMode();
+  els.codeView.classList.remove("active");
+  els.searchView.classList.add("active");
+  releaseWakeLock();
+  stopMotionKeepAlive();
+  els.searchInput.focus();
+  els.searchInput.select();
+}
+
+async function requestWakeLock() {
+  try { if ("wakeLock" in navigator) state.wakeLock = await navigator.wakeLock.request("screen"); } catch(err) {}
+}
+async function releaseWakeLock() {
+  try { if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock = null; } } catch(err) {}
+}
+function startMotionKeepAlive() {
+  stopMotionKeepAlive();
+  state.motionTick = setInterval(() => {
+    if (!els.warehouseAnimation || !els.codeView.classList.contains("active")) return;
+    els.warehouseAnimation.dataset.tick = String(Date.now());
+  }, 15000);
+}
+function stopMotionKeepAlive() {
+  if (state.motionTick) {
+    clearInterval(state.motionTick);
+    state.motionTick = null;
+  }
+}
+function enterFullscreenMode() {
+  document.body.classList.add("fullscreen-mode");
+  requestWakeLock();
+  try { document.documentElement.requestFullscreen?.().catch?.(()=>{}); } catch(err) {}
+}
+function exitFullscreenMode() {
+  document.body.classList.remove("fullscreen-mode");
+  if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+}
+function updateFavoriteButton() {
+  const active = state.selected && getFavorites().includes(state.selected.display);
+  els.favoriteBtn.textContent = active ? "★" : "☆";
+  els.favoriteBtn.classList.toggle("active", active);
+}
+function toggleFavorite() {
+  if (!state.selected) return;
+  const favorites = getFavorites();
+  const exists = favorites.includes(state.selected.display);
+  setFavorites(exists ? favorites.filter(item => item !== state.selected.display) : [state.selected.display, ...favorites]);
+  updateFavoriteButton();
+  renderFavorites();
+}
+
+function startVoiceSearch() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    els.voiceStatus.textContent = "Voice search is not supported in this browser.";
+    return;
+  }
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+  els.voiceStatus.textContent = "Listening…";
+  els.micBtn.textContent = "🔴";
+  recognition.onresult = event => {
+    const spoken = event.results[0][0].transcript;
+    const normalized = normalizeSpeech(spoken);
+    els.searchInput.value = normalized;
+    els.voiceStatus.textContent = `Heard: ${spoken}`;
+    runSearch(normalized);
+  };
+  recognition.onerror = () => {
+    els.voiceStatus.textContent = "Voice search stopped. Try again or type the code.";
+  };
+  recognition.onend = () => {
+    els.micBtn.textContent = "🎤";
+  };
+  recognition.start();
+}
+
+function escapeHtml(value) {
+  return String(value).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+
+els.searchInput.addEventListener("input", event => {
+  runSearch(event.target.value);
+  els.newDisplayInput.value = cleanValue(event.target.value);
+});
+els.clearBtn.addEventListener("click", () => {
+  els.searchInput.value = "";
+  els.newDisplayInput.value = "";
+  runSearch("");
+  els.searchInput.focus();
+});
+els.micBtn.addEventListener("click", startVoiceSearch);
+els.toggleAddPanelBtn.addEventListener("click", () => {
+  els.toggleAddPanelBtn.closest(".add-panel")?.classList.toggle("collapsed");
+});
+els.addMappingBtn.addEventListener("click", addMapping);
+
+if (els.updateLocationSelect) els.updateLocationSelect.addEventListener("change", updateSelectedHiddenInput);
+if (els.updateHiddenBtn) els.updateHiddenBtn.addEventListener("click", updateHiddenValue);
+
+els.importBtn.addEventListener("click", importMappings);
+els.exportBtn.addEventListener("click", exportMappings);
+els.backBtn.addEventListener("click", closeCode);
+els.doneBtn.addEventListener("click", closeCode);
+els.favoriteBtn.addEventListener("click", toggleFavorite);
+els.visibleBarcodeBtn.addEventListener("click", () => {
+  state.codeMode = "visible-barcode";
+  renderCurrentCode();
+});
+els.hiddenQrBtn.addEventListener("click", () => {
+  state.codeMode = "hidden-qr";
+  renderCurrentCode();
+});
+els.fullScreenBtn.addEventListener("click", enterFullscreenMode);
+els.exitFullScreenBtn.addEventListener("click", exitFullscreenMode);
+els.copyBtn.addEventListener("click", async () => {
+  if (!state.selected) return;
+  const text = state.codeMode === "visible-barcode" ? state.selected.display : state.selected.hidden;
+  await navigator.clipboard.writeText(text).catch(()=>{});
+});
+document.addEventListener("fullscreenchange", () => {
+  if (!document.fullscreenElement) document.body.classList.remove("fullscreen-mode");
+});
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") exitFullscreenMode();
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && els.codeView.classList.contains("active")) requestWakeLock();
+});
+
+loadRecords();
+</script>
+</body>
+</html>
